@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manajemen User · Smart Garden</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css"
+    />
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <span class="brand-mark">🌱</span>
+          <div class="brand-text">
+            GardenTech
+            <span>Monitoring & control</span>
+          </div>
+          <button class="sidebar-close-btn" id="sidebarCloseBtn"><i class="ti ti-x"></i></button>
+        </div>
+
+        <ul class="sidebar-nav" id="sidebarNav">
+          <li class="nav-section-label">Menu utama</li>
+          <li>
+            <a href="../dashboard.html" class="nav-link"
+              ><span class="nav-icon"
+                ><i class="ti ti-layout-dashboard"></i
+              ></span>
+              Dashboard</a
+            >
+          </li>
+          <li>
+            <a href="devices.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-cpu"></i></span>
+              Devices</a
+            >
+          </li>
+          <li>
+            <a href="sensors.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-gauge"></i></span>
+              Sensors</a
+            >
+          </li>
+          <li>
+            <a href="actuators.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-toggle-left"></i></span>
+              Actuators</a
+            >
+          </li>
+          <li>
+            <a href="charts.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-chart-line"></i></span>
+              Charts & history</a
+            >
+          </li>
+          <li>
+            <a href="logs.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-list-details"></i></span>
+              Logs</a
+            >
+          </li>
+
+          <!-- Bagian "Sistem" cuma untuk Admin, di-render lewat JS di bawah -->
+          <li
+            class="nav-section-label"
+            id="sistemSectionLabel"
+            style="display: none"
+          >
+            Sistem
+          </li>
+          <li id="settingsNavItem" style="display: none">
+            <a href="settings.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-settings"></i></span>
+              Config (Backend & MQTT)</a
+            >
+          </li>
+          <li id="usersNavItem" style="display: none">
+            <a href="users.html" class="nav-link active"
+              ><span class="nav-icon"><i class="ti ti-users"></i></span>
+              Manajemen User</a
+            >
+          </li>
+        </ul>
+
+        <div class="sidebar-footer">
+          <button class="logout-btn" id="logoutBtn">
+            <i class="ti ti-logout-2"></i> Keluar
+          </button>
+        </div>
+      </aside>
+
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+      <div class="main-area">
+        <header class="topbar">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <button class="hamburger-btn" id="hamburgerBtn"><i class="ti ti-menu-2"></i></button>
+            <div class="topbar-title">
+            <h1>Manajemen User</h1>
+            <p>Kelola akun, role, dan akses pengguna dashboard</p>
+          </div>
+          </div>
+          <div class="topbar-right">
+            <span class="connection-pill"
+              ><span class="dot"></span> MQTT terhubung</span
+            >
+            <div class="topbar-user">
+              <span class="avatar" id="userAvatar">A</span>
+              <div>
+                <span id="userName">admin</span
+                ><span class="role" id="userRole">Admin</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main class="content">
+          <section class="page-section">
+            <div class="card card-pad">
+              <div class="card-header">
+                <h3>
+                  <i class="ti ti-users"></i> Semua user (<span id="userCount"
+                    >0</span
+                  >)
+                </h3>
+              </div>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Terdaftar</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="userTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/ui.js"></script>
+    <script>
+      // Halaman ini khusus Admin — non-admin otomatis dilempar ke dashboard.
+      const session = requireAdmin();
+
+      if (session) {
+        document.getElementById("userName").textContent = session.username;
+        document.getElementById("userRole").textContent = session.role;
+        document.getElementById("userAvatar").textContent = session.username
+          .substring(0, 2)
+          .toUpperCase();
+        document
+          .getElementById("logoutBtn")
+          .addEventListener("click", logoutUser);
+
+        // tampilkan menu "Sistem" karena yang login Admin
+        document.getElementById("sistemSectionLabel").style.display = "";
+        document.getElementById("settingsNavItem").style.display = "";
+        document.getElementById("usersNavItem").style.display = "";
+
+        function showToast(message, type = "success") {
+          const toast = document.getElementById("toast");
+          toast.textContent = message;
+          toast.className = `toast show ${type}`;
+          setTimeout(() => toast.classList.remove("show"), 2500);
+        }
+
+        function formatDate(iso) {
+          if (!iso) return "—";
+          const d = new Date(iso);
+          return d.toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          });
+        }
+
+        function roleBadgeClass(role) {
+          return role === "Admin" ? "badge-success" : "badge-muted";
+        }
+
+        async function renderUsers() {
+          let users;
+          try {
+            users = await getAllUsers();
+          } catch (err) {
+            showToast(err.message, "error");
+            return;
+          }
+
+          document.getElementById("userCount").textContent = users.length;
+
+          const tbody = document.getElementById("userTableBody");
+          tbody.innerHTML = users
+            .map(
+              (u) => `
+          <tr>
+            <td>
+              <strong>${u.username}</strong>
+              ${u.username === session.username ? '<span class="badge badge-muted" style="margin-left:6px;">Kamu</span>' : ""}
+            </td>
+            <td>
+              <select class="form-select role-select" data-username="${u.username}" style="width:auto; padding:5px 9px; font-size:12.5px;">
+                <option value="Admin" ${u.role === "Admin" ? "selected" : ""}>Admin</option>
+                <option value="Viewer" ${u.role === "Viewer" ? "selected" : ""}>Viewer</option>
+              </select>
+            </td>
+            <td>${formatDate(u.createdAt)}</td>
+            <td class="row-actions">
+              <button class="btn btn-danger btn-sm delete-btn" data-username="${u.username}" ${u.username === session.username ? "disabled" : ""}>
+                <i class="ti ti-trash"></i> Hapus
+              </button>
+            </td>
+          </tr>
+        `,
+            )
+            .join("");
+
+          // event: ubah role
+          document.querySelectorAll(".role-select").forEach((select) => {
+            select.addEventListener("change", async (e) => {
+              const username = e.target.dataset.username;
+              const newRole = e.target.value;
+              try {
+                await updateUserRole(username, newRole);
+                showToast(`Role ${username} diubah jadi ${newRole}`);
+                renderUsers();
+              } catch (err) {
+                showToast(err.message, "error");
+              }
+            });
+          });
+
+          // event: hapus user
+          document.querySelectorAll(".delete-btn").forEach((btn) => {
+            btn.addEventListener("click", async (e) => {
+              const username = e.currentTarget.dataset.username;
+              if (
+                !confirm(
+                  `Hapus user "${username}"? Tindakan ini tidak bisa dibatalkan.`,
+                )
+              )
+                return;
+              try {
+                await deleteUser(username);
+                showToast(`User ${username} berhasil dihapus`);
+                renderUsers();
+              } catch (err) {
+                showToast(err.message, "error");
+              }
+            });
+          });
+        }
+
+        renderUsers();
+      }
+    </script>
+  </body>
+</html>

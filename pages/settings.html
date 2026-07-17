@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Config · Smart Garden</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css"
+    />
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <span class="brand-mark">🌱</span>
+          <div class="brand-text">
+            GardenTech<span>Monitoring & control</span>
+          </div>
+        </div>
+
+        <ul class="sidebar-nav">
+          <li class="nav-section-label">Menu utama</li>
+          <li>
+            <a href="../dashboard.html" class="nav-link"
+              ><span class="nav-icon"
+                ><i class="ti ti-layout-dashboard"></i
+              ></span>
+              Dashboard</a
+            >
+          </li>
+          <li>
+            <a href="devices.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-cpu"></i></span>
+              Devices</a
+            >
+          </li>
+          <li>
+            <a href="sensors.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-gauge"></i></span>
+              Sensors</a
+            >
+          </li>
+          <li>
+            <a href="actuators.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-toggle-left"></i></span>
+              Actuators</a
+            >
+          </li>
+          <li>
+            <a href="charts.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-chart-line"></i></span>
+              Charts & history</a
+            >
+          </li>
+          <li>
+            <a href="logs.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-list-details"></i></span>
+              Logs</a
+            >
+          </li>
+
+          <li
+            class="nav-section-label"
+            id="sistemSectionLabel"
+            style="display: none"
+          >
+            Sistem
+          </li>
+          <li id="settingsNavItem" style="display: none">
+            <a href="settings.html" class="nav-link active"
+              ><span class="nav-icon"><i class="ti ti-settings"></i></span>
+              Config (Backend & MQTT)</a
+            >
+          </li>
+          <li id="usersNavItem" style="display: none">
+            <a href="users.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-users"></i></span>
+              Manajemen User</a
+            >
+          </li>
+        </ul>
+
+        <div class="sidebar-footer">
+          <button class="logout-btn" id="logoutBtn">
+            <i class="ti ti-logout-2"></i> Keluar
+          </button>
+        </div>
+      </aside>
+
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+      <div class="main-area">
+        <header class="topbar">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <button class="hamburger-btn" id="hamburgerBtn"><i class="ti ti-menu-2"></i></button>
+            <div class="topbar-title">
+            <h1>Config</h1>
+            <p>Pengaturan koneksi backend FastAPI dan MQTT HiveMQ</p>
+          </div>
+          </div>
+          <div class="topbar-right">
+            <span class="connection-pill" id="connectionPill"
+              ><span class="dot"></span> MQTT terhubung</span
+            >
+            <div class="topbar-user">
+              <span class="avatar" id="userAvatar">A</span>
+              <div>
+                <span id="userName">admin</span
+                ><span class="role" id="userRole">Admin</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main class="content">
+          <section class="page-section settings-grid">
+            <!-- ===== KONFIGURASI BACKEND ===== -->
+            <div class="card card-pad">
+              <div class="card-header">
+                <h3><i class="ti ti-server-2"></i> Backend API</h3>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">API base URL</label>
+                <input
+                  type="text"
+                  class="form-input"
+                  id="apiBaseUrl"
+                  placeholder="http://localhost:8000/api/v1"
+                />
+                <p class="form-hint">
+                  Alamat server FastAPI yang menyediakan endpoint sensor,
+                  device, dan auth.
+                </p>
+              </div>
+
+              <div
+                class="form-group"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                "
+              >
+                <span class="form-label" style="margin-bottom: 0"
+                  >Gunakan data dummy</span
+                >
+                <label class="switch">
+                  <input type="checkbox" id="useDummyToggle" />
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <p
+                class="form-hint"
+                style="margin-top: -8px; margin-bottom: 14px"
+              >
+                Aktifkan selama backend belum siap. Matikan saat sudah ingin
+                mengambil data asli dari FastAPI.
+              </p>
+
+              <button class="btn btn-outline btn-block" id="testBackendBtn">
+                <i class="ti ti-plug-connected"></i> Tes koneksi backend
+              </button>
+              <div class="test-result" id="backendTestResult"></div>
+            </div>
+
+            <!-- ===== KONFIGURASI MQTT HIVEMQ ===== -->
+            <div class="card card-pad">
+              <div class="card-header">
+                <h3><i class="ti ti-broadcast"></i> MQTT HiveMQ</h3>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Broker</label>
+                <input
+                  type="text"
+                  class="form-input"
+                  id="mqttBroker"
+                  placeholder="xxxx.s1.eu.hivemq.cloud"
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Port</label>
+                <input
+                  type="number"
+                  class="form-input"
+                  id="mqttPort"
+                  placeholder="8883"
+                />
+                <p class="form-hint">
+                  8883 = TLS (disarankan), 1883 = tanpa enkripsi.
+                </p>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Username</label>
+                <input
+                  type="text"
+                  class="form-input"
+                  id="mqttUsername"
+                  placeholder="iot_user"
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Password</label>
+                <input
+                  type="password"
+                  class="form-input"
+                  id="mqttPassword"
+                  placeholder="••••••••"
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Topic sensor (subscribe)</label>
+                <input
+                  type="text"
+                  class="form-input"
+                  id="mqttTopicSensor"
+                  placeholder="gardenkit/+/sensor"
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Topic kontrol (publish)</label>
+                <input
+                  type="text"
+                  class="form-input"
+                  id="mqttTopicControl"
+                  placeholder="gardenkit/+/control"
+                />
+              </div>
+
+              <button class="btn btn-outline btn-block" id="testMqttBtn">
+                <i class="ti ti-plug-connected"></i> Tes koneksi MQTT
+              </button>
+              <div class="test-result" id="mqttTestResult"></div>
+            </div>
+          </section>
+
+          <section class="page-section">
+            <div
+              class="card card-pad"
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+              "
+            >
+              <div>
+                <h3
+                  style="
+                    margin: 0 0 4px;
+                    font-family: var(--font-display);
+                    font-size: 14.5px;
+                  "
+                >
+                  Simpan pengaturan
+                </h3>
+                <p
+                  style="
+                    margin: 0;
+                    font-size: 12.5px;
+                    color: var(--color-text-muted);
+                  "
+                >
+                  Pengaturan disimpan di browser (localStorage) untuk mode demo
+                  ini.
+                </p>
+              </div>
+              <button class="btn btn-primary" id="saveSettingsBtn">
+                <i class="ti ti-device-floppy"></i> Simpan pengaturan
+              </button>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/ui.js"></script>
+    <script>
+      const session = requireAdmin();
+      document.getElementById("userName").textContent = session.username;
+      document.getElementById("userRole").textContent = session.role;
+      document.getElementById("userAvatar").textContent = session.username
+        .substring(0, 2)
+        .toUpperCase();
+
+      // menu "Sistem" (Config & Manajemen User) hanya untuk Admin
+      if (session.role === "Admin") {
+        document.getElementById("sistemSectionLabel").style.display = "";
+        document.getElementById("settingsNavItem").style.display = "";
+        document.getElementById("usersNavItem").style.display = "";
+      }
+      document
+        .getElementById("logoutBtn")
+        .addEventListener("click", logoutUser);
+
+      const SETTINGS_KEY = "sg_settings";
+
+      function showToast(message, type = "success") {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.className = `toast show ${type}`;
+        setTimeout(() => toast.classList.remove("show"), 2500);
+      }
+
+      /* ---------- load pengaturan tersimpan, atau pakai default dari config.js ---------- */
+
+      function loadSettings() {
+        const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null");
+        const mqttDefault = APP_CONFIG.MQTT_DEFAULT;
+
+        document.getElementById("apiBaseUrl").value =
+          saved?.apiBaseUrl || APP_CONFIG.API_BASE_URL;
+        document.getElementById("useDummyToggle").checked =
+          saved?.useDummyData ?? APP_CONFIG.USE_DUMMY_DATA;
+
+        document.getElementById("mqttBroker").value =
+          saved?.mqttBroker || mqttDefault.broker;
+        document.getElementById("mqttPort").value =
+          saved?.mqttPort || mqttDefault.port;
+        document.getElementById("mqttUsername").value =
+          saved?.mqttUsername || mqttDefault.username;
+        document.getElementById("mqttPassword").value =
+          saved?.mqttPassword || "";
+        document.getElementById("mqttTopicSensor").value =
+          saved?.mqttTopicSensor || mqttDefault.topicSensor;
+        document.getElementById("mqttTopicControl").value =
+          saved?.mqttTopicControl || mqttDefault.topicControl;
+      }
+
+      /* ---------- simpan pengaturan ---------- */
+
+      document
+        .getElementById("saveSettingsBtn")
+        .addEventListener("click", () => {
+          const settings = {
+            apiBaseUrl: document.getElementById("apiBaseUrl").value.trim(),
+            useDummyData: document.getElementById("useDummyToggle").checked,
+            mqttBroker: document.getElementById("mqttBroker").value.trim(),
+            mqttPort: document.getElementById("mqttPort").value.trim(),
+            mqttUsername: document.getElementById("mqttUsername").value.trim(),
+            mqttPassword: document.getElementById("mqttPassword").value,
+            mqttTopicSensor: document
+              .getElementById("mqttTopicSensor")
+              .value.trim(),
+            mqttTopicControl: document
+              .getElementById("mqttTopicControl")
+              .value.trim(),
+          };
+          localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+          showToast("Pengaturan berhasil disimpan");
+        });
+
+      /* ---------- tes koneksi backend ---------- */
+
+      document
+        .getElementById("testBackendBtn")
+        .addEventListener("click", async () => {
+          const box = document.getElementById("backendTestResult");
+          const url = document.getElementById("apiBaseUrl").value.trim();
+
+          if (APP_CONFIG.USE_DUMMY_DATA) {
+            box.textContent =
+              "Mode dummy aktif — tes koneksi nyata akan tersedia setelah backend FastAPI dijalankan.";
+            box.className = "test-result show";
+            return;
+          }
+
+          // catatan: endpoint /health ada di root server, bukan di bawah /api/v1
+          const healthUrl = url.replace(/\/api\/v1\/?$/, "") + "/health";
+
+          try {
+            const res = await fetch(healthUrl);
+            if (!res.ok) throw new Error("Gagal");
+            box.textContent = "Berhasil terhubung ke backend.";
+            box.className = "test-result show ok";
+          } catch (err) {
+            box.textContent = "Tidak bisa terhubung ke " + url;
+            box.className = "test-result show fail";
+          }
+        });
+
+      document.getElementById("testMqttBtn").addEventListener("click", () => {
+        const box = document.getElementById("mqttTestResult");
+        box.textContent =
+          "Tes koneksi MQTT memerlukan backend yang menjembatani ke HiveMQ. Saat ini hanya menyimpan konfigurasi.";
+        box.className = "test-result show";
+      });
+
+      loadSettings();
+    </script>
+  </body>
+</html>

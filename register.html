@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Daftar · Smart Garden Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/auth.css" />
+  </head>
+  <body class="auth-body">
+    <div class="auth-visual">
+      <div class="brand">
+        <span class="brand-mark">🌱</span>
+        GardenTech
+      </div>
+
+      <div class="visual-copy">
+        <h2>Satu akun untuk memantau seluruh sistem taman kamu.</h2>
+        <p>
+          Buat akun untuk mengakses dashboard monitoring kelembapan tanah, suhu
+          udara, level air, dan kontrol pompa secara real-time.
+        </p>
+      </div>
+
+      <div class="visual-stats">
+        <div>
+          <span class="v-num">ESP32</span>
+          <span class="v-label">Mikrokontroler</span>
+        </div>
+        <div>
+          <span class="v-num">MQTT</span>
+          <span class="v-label">HiveMQ Cloud</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-panel">
+      <div class="auth-form-wrap">
+        <div class="auth-heading">
+          <h1>Buat akun baru</h1>
+          <p>Daftar dulu sebelum bisa mengakses dashboard.</p>
+        </div>
+
+        <div class="auth-error" id="registerError"></div>
+
+        <form id="registerForm">
+          <div class="form-group">
+            <label class="form-label" for="username">Username</label>
+            <input
+              class="form-input"
+              type="text"
+              id="username"
+              name="username"
+              placeholder="contoh: budi_garden"
+              autocomplete="username"
+              required
+              minlength="3"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <input
+              class="form-input"
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Minimal 6 karakter"
+              autocomplete="new-password"
+              required
+              minlength="6"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="confirmPassword"
+              >Konfirmasi password</label
+            >
+            <input
+              class="form-input"
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              placeholder="Ulangi password"
+              autocomplete="new-password"
+              required
+              minlength="6"
+            />
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">
+            <i class="ti ti-user-plus"></i> Daftar
+          </button>
+        </form>
+
+        <p class="auth-footer-link">
+          Sudah punya akun? <a href="index.html">Masuk di sini</a>
+        </p>
+
+        <div class="auth-demo-hint">
+          Mode demo: akun disimpan sementara di browser kamu (localStorage),
+          belum tersambung ke server.
+        </div>
+      </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+      if (getSession()) {
+        window.location.href = "dashboard.html";
+      }
+
+      const form = document.getElementById("registerForm");
+      const errorBox = document.getElementById("registerError");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        errorBox.classList.remove("show");
+
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value;
+        const confirmPassword =
+          document.getElementById("confirmPassword").value;
+
+        if (password !== confirmPassword) {
+          errorBox.textContent = "Password dan konfirmasi password tidak sama.";
+          errorBox.classList.add("show");
+          return;
+        }
+
+        try {
+          await registerUser(username, password);
+          window.location.href = "index.html?registered=1";
+        } catch (err) {
+          errorBox.textContent = err.message;
+          errorBox.classList.add("show");
+        }
+      });
+    </script>
+  </body>
+</html>

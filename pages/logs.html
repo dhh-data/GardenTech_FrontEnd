@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Logs · Smart Garden</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css"
+    />
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <span class="brand-mark">🌱</span>
+          <div class="brand-text">
+            GardenTech<span>Monitoring & control</span>
+          </div>
+        </div>
+
+        <ul class="sidebar-nav">
+          <li class="nav-section-label">Menu utama</li>
+          <li>
+            <a href="../dashboard.html" class="nav-link"
+              ><span class="nav-icon"
+                ><i class="ti ti-layout-dashboard"></i
+              ></span>
+              Dashboard</a
+            >
+          </li>
+          <li>
+            <a href="devices.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-cpu"></i></span>
+              Devices</a
+            >
+          </li>
+          <li>
+            <a href="sensors.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-gauge"></i></span>
+              Sensors</a
+            >
+          </li>
+          <li>
+            <a href="actuators.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-toggle-left"></i></span>
+              Actuators</a
+            >
+          </li>
+          <li>
+            <a href="charts.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-chart-line"></i></span>
+              Charts & history</a
+            >
+          </li>
+          <li>
+            <a href="logs.html" class="nav-link active"
+              ><span class="nav-icon"><i class="ti ti-list-details"></i></span>
+              Logs</a
+            >
+          </li>
+
+          <li
+            class="nav-section-label"
+            id="sistemSectionLabel"
+            style="display: none"
+          >
+            Sistem
+          </li>
+          <li id="settingsNavItem" style="display: none">
+            <a href="settings.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-settings"></i></span>
+              Config (Backend & MQTT)</a
+            >
+          </li>
+          <li id="usersNavItem" style="display: none">
+            <a href="users.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-users"></i></span>
+              Manajemen User</a
+            >
+          </li>
+        </ul>
+
+        <div class="sidebar-footer">
+          <button class="logout-btn" id="logoutBtn">
+            <i class="ti ti-logout-2"></i> Keluar
+          </button>
+        </div>
+      </aside>
+
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+      <div class="main-area">
+        <header class="topbar">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <button class="hamburger-btn" id="hamburgerBtn"><i class="ti ti-menu-2"></i></button>
+            <div class="topbar-title">
+            <h1>Logs</h1>
+            <p>Riwayat lengkap aktivitas sistem</p>
+          </div>
+          </div>
+          <div class="topbar-right">
+            <span class="connection-pill"
+              ><span class="dot"></span> MQTT terhubung</span
+            >
+            <div class="topbar-user">
+              <span class="avatar" id="userAvatar">A</span>
+              <div>
+                <span id="userName">admin</span
+                ><span class="role" id="userRole">Admin</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main class="content">
+          <section class="page-section">
+            <div class="card card-pad">
+              <div class="card-header">
+                <h3>Semua aktivitas</h3>
+              </div>
+              <div class="log-list" id="fullLogList"></div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/dummy-data.js"></script>
+    <script src="../js/ui.js"></script>
+    <script>
+      const session = requireAuth();
+      document.getElementById("userName").textContent = session.username;
+      document.getElementById("userRole").textContent = session.role;
+      document.getElementById("userAvatar").textContent = session.username
+        .substring(0, 2)
+        .toUpperCase();
+
+      // menu "Sistem" (Config & Manajemen User) hanya untuk Admin
+      if (session.role === "Admin") {
+        document.getElementById("sistemSectionLabel").style.display = "";
+        document.getElementById("settingsNavItem").style.display = "";
+        document.getElementById("usersNavItem").style.display = "";
+      }
+      document
+        .getElementById("logoutBtn")
+        .addEventListener("click", logoutUser);
+
+      const LOG_TYPE_STYLE = {
+        info: { icon: "ti-info-circle", bg: "var(--color-info)" },
+        success: { icon: "ti-check", bg: "var(--color-success)" },
+        warning: { icon: "ti-alert-triangle", bg: "var(--color-warning)" },
+        danger: { icon: "ti-alert-circle", bg: "var(--color-danger)" },
+      };
+
+      async function fetchLogs() {
+        if (APP_CONFIG.USE_DUMMY_DATA) {
+          return getDummyLogs().reverse();
+        }
+        const res = await fetch(
+          APP_CONFIG.API_BASE_URL + APP_CONFIG.LOGS_ENDPOINT + "?limit=100",
+        );
+        if (!res.ok) throw new Error("Gagal mengambil log aktivitas.");
+        return await res.json();
+      }
+
+      async function renderLogs() {
+        const container = document.getElementById("fullLogList");
+        let logs;
+        try {
+          logs = await fetchLogs();
+        } catch (err) {
+          container.innerHTML = `<div class="empty-state">${err.message}</div>`;
+          return;
+        }
+
+        if (logs.length === 0) {
+          container.innerHTML = `<div class="empty-state"><div class="empty-icon"><i class="ti ti-history"></i></div>Belum ada aktivitas</div>`;
+          return;
+        }
+
+        container.innerHTML = logs
+          .map((log) => {
+            const style = LOG_TYPE_STYLE[log.type] || LOG_TYPE_STYLE.info;
+            return `
+          <div class="log-item">
+            <span class="log-time">${log.time}</span>
+            <span class="log-type-icon" style="background:${style.bg}1a; color:${style.bg};"><i class="ti ${style.icon}"></i></span>
+            <span>${log.text}</span>
+          </div>`;
+          })
+          .join("");
+      }
+
+      renderLogs();
+    </script>
+  </body>
+</html>

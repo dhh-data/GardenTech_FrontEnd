@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sensors · Smart Garden</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css"
+    />
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <span class="brand-mark">🌱</span>
+          <div class="brand-text">
+            GardenTech<span>Monitoring & control</span>
+          </div>
+        </div>
+
+        <ul class="sidebar-nav">
+          <li class="nav-section-label">Menu utama</li>
+          <li>
+            <a href="../dashboard.html" class="nav-link"
+              ><span class="nav-icon"
+                ><i class="ti ti-layout-dashboard"></i
+              ></span>
+              Dashboard</a
+            >
+          </li>
+          <li>
+            <a href="devices.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-cpu"></i></span>
+              Devices</a
+            >
+          </li>
+          <li>
+            <a href="sensors.html" class="nav-link active"
+              ><span class="nav-icon"><i class="ti ti-gauge"></i></span>
+              Sensors</a
+            >
+          </li>
+          <li>
+            <a href="actuators.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-toggle-left"></i></span>
+              Actuators</a
+            >
+          </li>
+          <li>
+            <a href="charts.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-chart-line"></i></span>
+              Charts & history</a
+            >
+          </li>
+          <li>
+            <a href="logs.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-list-details"></i></span>
+              Logs</a
+            >
+          </li>
+
+          <li
+            class="nav-section-label"
+            id="sistemSectionLabel"
+            style="display: none"
+          >
+            Sistem
+          </li>
+          <li id="settingsNavItem" style="display: none">
+            <a href="settings.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-settings"></i></span>
+              Config (Backend & MQTT)</a
+            >
+          </li>
+          <li id="usersNavItem" style="display: none">
+            <a href="users.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-users"></i></span>
+              Manajemen User</a
+            >
+          </li>
+        </ul>
+
+        <div class="sidebar-footer">
+          <button class="logout-btn" id="logoutBtn">
+            <i class="ti ti-logout-2"></i> Keluar
+          </button>
+        </div>
+      </aside>
+
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+      <div class="main-area">
+        <header class="topbar">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <button class="hamburger-btn" id="hamburgerBtn"><i class="ti ti-menu-2"></i></button>
+            <div class="topbar-title">
+            <h1>Sensors</h1>
+            <p>Nilai pembacaan terbaru dari setiap sensor</p>
+          </div>
+          </div>
+          <div class="topbar-right">
+            <span class="connection-pill"
+              ><span class="dot"></span> MQTT terhubung</span
+            >
+            <div class="topbar-user">
+              <span class="avatar" id="userAvatar">A</span>
+              <div>
+                <span id="userName">admin</span
+                ><span class="role" id="userRole">Admin</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main class="content">
+          <section class="page-section">
+            <div class="grid grid-cols-3" id="sensorGrid"></div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/dummy-data.js"></script>
+    <script src="../js/ui.js"></script>
+    <script>
+      const session = requireAuth();
+      document.getElementById("userName").textContent = session.username;
+      document.getElementById("userRole").textContent = session.role;
+      document.getElementById("userAvatar").textContent = session.username
+        .substring(0, 2)
+        .toUpperCase();
+
+      // menu "Sistem" (Config & Manajemen User) hanya untuk Admin
+      if (session.role === "Admin") {
+        document.getElementById("sistemSectionLabel").style.display = "";
+        document.getElementById("settingsNavItem").style.display = "";
+        document.getElementById("usersNavItem").style.display = "";
+      }
+      document
+        .getElementById("logoutBtn")
+        .addEventListener("click", logoutUser);
+
+      async function fetchSensors() {
+        if (APP_CONFIG.USE_DUMMY_DATA) {
+          return getDummySensors();
+        }
+        const res = await fetch(APP_CONFIG.API_BASE_URL + APP_CONFIG.SENSORS_LIST_ENDPOINT);
+        if (!res.ok) throw new Error("Gagal mengambil daftar sensor.");
+        return await res.json();
+      }
+
+      async function renderSensors() {
+        let sensors;
+        try {
+          sensors = await fetchSensors();
+        } catch (err) {
+          document.getElementById("sensorGrid").innerHTML =
+            `<p style="color:var(--color-text-muted);">${err.message}</p>`;
+          return;
+        }
+
+        document.getElementById("sensorGrid").innerHTML = sensors
+          .map((s) => {
+            const badge =
+              s.status === "warning"
+                ? '<span class="badge badge-warning">Perlu perhatian</span>'
+                : '<span class="badge badge-success">Normal</span>';
+            return `
+          <div class="stat-card">
+            <div class="stat-top">
+              <span class="stat-label">${s.name}</span>
+            </div>
+            <div class="stat-value" style="font-size:22px;">${s.value}</div>
+            <div>${badge}</div>
+          </div>`;
+          })
+          .join("");
+      }
+
+      renderSensors();
+      setInterval(renderSensors, APP_CONFIG.REFRESH_INTERVAL_MS);
+    </script>
+  </body>
+</html>

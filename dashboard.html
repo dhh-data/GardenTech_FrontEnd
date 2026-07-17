@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard · Smart Garden</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <!-- ============ SIDEBAR ============ -->
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <span class="brand-mark">🌱</span>
+          <div class="brand-text">
+            GardenTech
+            <span>Monitoring & control</span>
+          </div>
+          <button class="sidebar-close-btn" id="sidebarCloseBtn"><i class="ti ti-x"></i></button>
+        </div>
+
+        <ul class="sidebar-nav">
+          <li class="nav-section-label">Menu utama</li>
+          <li>
+            <a href="dashboard.html" class="nav-link active"
+              ><span class="nav-icon"
+                ><i class="ti ti-layout-dashboard"></i
+              ></span>
+              Dashboard</a
+            >
+          </li>
+          <li>
+            <a href="pages/devices.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-cpu"></i></span>
+              Devices</a
+            >
+          </li>
+          <li>
+            <a href="pages/sensors.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-gauge"></i></span>
+              Sensors</a
+            >
+          </li>
+          <li>
+            <a href="pages/actuators.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-toggle-left"></i></span>
+              Actuators</a
+            >
+          </li>
+          <li>
+            <a href="pages/charts.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-chart-line"></i></span>
+              Charts & history</a
+            >
+          </li>
+          <li>
+            <a href="pages/logs.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-list-details"></i></span>
+              Logs</a
+            >
+          </li>
+
+          <li
+            class="nav-section-label"
+            id="sistemSectionLabel"
+            style="display: none"
+          >
+            Sistem
+          </li>
+          <li id="settingsNavItem" style="display: none">
+            <a href="pages/settings.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-settings"></i></span>
+              Config (Backend & MQTT)</a
+            >
+          </li>
+          <li id="usersNavItem" style="display: none">
+            <a href="pages/users.html" class="nav-link"
+              ><span class="nav-icon"><i class="ti ti-users"></i></span>
+              Manajemen User</a
+            >
+          </li>
+        </ul>
+
+        <div class="sidebar-footer">
+          <button class="logout-btn" id="logoutBtn">
+            <i class="ti ti-logout-2"></i> Keluar
+          </button>
+        </div>
+      </aside>
+
+      <!-- ============ MAIN AREA ============ -->
+      <div class="main-area">
+        <header class="topbar">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <button class="hamburger-btn" id="hamburgerBtn"><i class="ti ti-menu-2"></i></button>
+            <div class="topbar-title">
+            <h1>Dashboard</h1>
+            <p id="greetingText">
+              Monitoring real-time sistem penyiraman taman
+            </p>
+          </div>
+          </div>
+          <div class="topbar-right">
+            <span class="connection-pill" id="connectionPill">
+              <span class="dot"></span> MQTT terhubung
+            </span>
+            <div class="topbar-user">
+              <span class="avatar" id="userAvatar">A</span>
+              <div>
+                <span id="userName">admin</span>
+                <span class="role" id="userRole">Admin</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main class="content">
+          <!-- ===== STAT CARDS ===== -->
+          <section class="page-section">
+            <div class="grid grid-cols-3">
+              <div class="stat-card">
+                <div class="stat-top">
+                  <span class="stat-label">💧 Kelembapan tanah</span>
+                  <span class="stat-icon icon-tint-green">💧</span>
+                </div>
+                <div class="stat-value" id="statSoilMoisture">
+                  --<span class="unit">%</span>
+                </div>
+                <span class="stat-sub" id="statSoilMoistureSub"
+                  >Memuat data...</span
+                >
+              </div>
+
+              <div class="stat-card">
+                <div class="stat-top">
+                  <span class="stat-label">🌡️ Suhu udara</span>
+                  <span class="stat-icon icon-tint-amber">🌡️</span>
+                </div>
+                <div class="stat-value" id="statAirTemp">
+                  --<span class="unit">°C</span>
+                </div>
+                <span class="stat-sub">DHT22</span>
+              </div>
+
+              <div class="stat-card">
+                <div class="stat-top">
+                  <span class="stat-label">⚡ Daya pompa</span>
+                  <span class="stat-icon icon-tint-blue">⚡</span>
+                </div>
+                <div class="stat-value" id="statPumpPower">
+                  --<span class="unit">W</span>
+                </div>
+                <span class="stat-sub">INA219 current sensor</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== CHART + KONTROL POMPA ===== -->
+          <section class="page-section">
+            <div class="grid" style="grid-template-columns: 1.5fr 1fr">
+              <div class="card card-pad">
+                <div class="card-header">
+                  <h3>Tren kelembapan tanah (24 jam)</h3>
+                  <span class="card-header-meta" id="lastUpdate">--</span>
+                </div>
+                <div style="height: 220px; position: relative">
+                  <canvas id="moistureChart"></canvas>
+                </div>
+              </div>
+
+              <div class="card card-pad">
+                <div class="card-header">
+                  <h3>Kontrol pompa</h3>
+                </div>
+
+                <div
+                  class="form-group"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                  "
+                >
+                  <span class="form-label" style="margin-bottom: 0"
+                    >Mode otomatis</span
+                  >
+                  <label class="switch">
+                    <input type="checkbox" id="autoModeToggle" checked />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+
+                <div
+                  class="form-group"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                  "
+                >
+                  <span class="form-label" style="margin-bottom: 0"
+                    >Ambang batas siram</span
+                  >
+                  <span style="font-size: 13.5px; font-weight: 500"
+                    >&lt; <span id="thresholdLabel">40</span>%</span
+                  >
+                </div>
+
+                <button class="btn btn-primary btn-block" id="manualPumpBtn">
+                  <i class="ti ti-power"></i> Siram manual
+                </button>
+
+                <p
+                  style="
+                    text-align: center;
+                    font-size: 12.5px;
+                    color: var(--color-text-muted);
+                    margin-top: 10px;
+                  "
+                  id="pumpStatusText"
+                >
+                  Pompa: standby
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== STATUS SISTEM + LOG ===== -->
+          <section class="page-section">
+            <div class="grid grid-cols-2">
+              <div class="card card-pad">
+                <div class="card-header">
+                  <h3>Status keamanan & sistem</h3>
+                </div>
+                <div id="systemStatusList"></div>
+              </div>
+
+              <div class="card card-pad">
+                <div class="card-header">
+                  <h3>Log aktivitas terbaru</h3>
+                  <a href="pages/logs.html" class="card-header-meta"
+                    >Lihat semua &rarr;</a
+                  >
+                </div>
+                <div class="log-list" id="recentLogList"></div>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dummy-data.js"></script>
+  <script src="js/ui.js"></script>
+    <script src="js/dashboard.js"></script>
+  </body>
+</html>
