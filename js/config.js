@@ -7,7 +7,7 @@
 
 const APP_CONFIG = {
   // Ganti ke alamat backend FastAPI asli, misal: "http://localhost:8000/api/v1"
-  API_BASE_URL: "http://localhost:8000/api/v1",
+  API_BASE_URL: "https://gardentechbackend-production.up.railway.app/api/v1",
 
   // Endpoint auth (dipakai di auth.js)
   AUTH_LOGIN_ENDPOINT: "/auth/login",
