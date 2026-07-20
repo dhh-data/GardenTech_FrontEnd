@@ -221,6 +221,7 @@
       }
 
       renderDevices();
+      setInterval(renderDevices, APP_CONFIG.REFRESH_INTERVAL_MS);
     </script>
   </body>
 </html>
