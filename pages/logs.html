@@ -163,7 +163,17 @@
           APP_CONFIG.API_BASE_URL + APP_CONFIG.LOGS_ENDPOINT + "?limit=100",
         );
         if (!res.ok) throw new Error("Gagal mengambil log aktivitas.");
-        return await res.json();
+        const data = await res.json();
+return data.map(log => {
+  const [h, m] = log.time.split(":");
+  const totalMinutes = parseInt(h) * 60 + parseInt(m) + 7 * 60;
+  const hWIB = Math.floor(totalMinutes / 60) % 24;
+  const mWIB = totalMinutes % 60;
+  return {
+    ...log,
+    time: `${String(hWIB).padStart(2, "0")}:${String(mWIB).padStart(2, "0")}`
+  };
+});
       }
 
       async function renderLogs() {
