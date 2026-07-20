@@ -73,7 +73,16 @@ async function fetchRecentLogs() {
   if (!res.ok) throw new Error("Gagal mengambil log aktivitas.");
   const data = await res.json();
   // backend sudah urut terbaru-dulu, tidak perlu reverse lagi
-  return data;
+  return data.map(log => {
+  const [h, m] = log.time.split(":");
+  const totalMinutes = parseInt(h) * 60 + parseInt(m) + 7 * 60;
+  const hWIB = Math.floor(totalMinutes / 60) % 24;
+  const mWIB = totalMinutes % 60;
+  return {
+    ...log,
+    time: `${String(hWIB).padStart(2, "0")}:${String(mWIB).padStart(2, "0")}`
+  };
+});
 }
 
 async function sendPumpCommand(turnOn) {
